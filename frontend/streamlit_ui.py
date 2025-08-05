@@ -22,7 +22,6 @@ if uploaded_file and st.button("🚀 Upload"):
     files = {"file": uploaded_file}
     data = {"expiry_minutes": expiry_time, "access_limit": access_limit}
 
-    # Upload Animation
     upload_progress.progress(10)
     time.sleep(0.5)
     upload_progress.progress(30)
