@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: flask-fileshare
+    runtime: python
+    buildCommand: ""
+    startCommand: python app.py
+    envVars:
+      - key: SUPABASE_URL
+        value: https://coxhvaggbkroccvaztfp.supabase.co
+      - key: SUPABASE_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNveGh2YWdnYmtyb2NjdmF6dGZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQzNzY2MjQsImV4cCI6MjA2OTk1MjYyNH0.UseBKzAwt1SK6JhTk2rYdbUMBRcYPin0S5rUgRzto5

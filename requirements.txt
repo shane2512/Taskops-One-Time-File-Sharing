@@ -1,1 +1,4 @@
-pip install flask flask-sqlalchemy flask-cors streamlit requests qrcode[pil] shortuuid
+flask
+flask-cors
+supabase
+shortuuid
