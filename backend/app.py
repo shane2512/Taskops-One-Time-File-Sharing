@@ -20,6 +20,9 @@ BUCKET_NAME = "filebucket"  # ✅ Ensure this bucket exists in Supabase
 # ------------------
 app = Flask(__name__)
 CORS(app)
+@app.route("/", methods=["GET"])
+def home():
+    return jsonify({"message": "✅ File sharing backend is running."}), 200
 
 # ------------------
 # Upload File Route
@@ -95,3 +98,4 @@ def download_file(token):
         return jsonify({"error": "Unable to generate download URL"}), 500
 
     return redirect(signed["signedURL"])
+
