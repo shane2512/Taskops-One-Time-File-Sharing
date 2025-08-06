@@ -40,20 +40,17 @@ def upload_file():
     filename = f"{file_id}_{file.filename}"
     expires_at = (datetime.utcnow() + timedelta(minutes=expiry_minutes)).isoformat()
 
-    # ✅ Read file bytes
-    file_bytes = BytesIO(file.read())
-
-    # ✅ Upload to Supabase Storage with correct headers
+    # ✅ Upload file bytes to Supabase
     res = supabase.storage.from_(BUCKET_NAME).upload(
         path=filename,
-        file=file_bytes,
+        file=file.read(),  # 👈 THIS is the fix
         file_options={"content-type": file.mimetype}
     )
 
     if res.get("error"):
-        return jsonify({"error": "Upload to storage failed"}), 500
+        return jsonify({"error": "Upload to storage failed", "details": res["error"]}), 500
 
-    # ✅ Save metadata to database
+    # ✅ Save metadata to DB
     data = {
         "filename": file.filename,
         "token": file_id,
@@ -67,6 +64,7 @@ def upload_file():
         "message": "File uploaded",
         "download_link": request.host_url + f"download/{file_id}"
     }), 201
+
 
 # ------------------
 # Download File Route
@@ -98,4 +96,5 @@ def download_file(token):
         return jsonify({"error": "Unable to generate download URL"}), 500
 
     return redirect(signed["signedURL"])
+
 
