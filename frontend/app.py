@@ -63,3 +63,4 @@ if uploaded_file and st.button("🚀 Upload"):
     except requests.exceptions.RequestException as e:
         upload_progress.empty()
         st.error(f"🚫 Failed to connect to backend:\n\n{e}")
+
