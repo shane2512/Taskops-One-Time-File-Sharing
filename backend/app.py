@@ -1,8 +1,9 @@
 from flask import Flask, request, jsonify, redirect
 from supabase import create_client, Client
 from datetime import datetime, timedelta
-import shortuuid
 from flask_cors import CORS
+from io import BytesIO
+import shortuuid
 import os
 
 # ------------------
@@ -12,9 +13,11 @@ SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-BUCKET_NAME = "filebucket"  # ⚠️ Change this to your actual bucket name
+BUCKET_NAME = "filebucket"  # ✅ Ensure this bucket exists in Supabase
 
+# ------------------
 # Flask App
+# ------------------
 app = Flask(__name__)
 CORS(app)
 
@@ -34,12 +37,20 @@ def upload_file():
     filename = f"{file_id}_{file.filename}"
     expires_at = (datetime.utcnow() + timedelta(minutes=expiry_minutes)).isoformat()
 
-    # Upload file to Supabase Storage
-    res = supabase.storage.from_(BUCKET_NAME).upload(filename, file, {"content-type": file.mimetype})
+    # ✅ Read file bytes
+    file_bytes = BytesIO(file.read())
+
+    # ✅ Upload to Supabase Storage with correct headers
+    res = supabase.storage.from_(BUCKET_NAME).upload(
+        path=filename,
+        file=file_bytes,
+        file_options={"content-type": file.mimetype}
+    )
+
     if res.get("error"):
         return jsonify({"error": "Upload to storage failed"}), 500
 
-    # Save metadata to DB
+    # ✅ Save metadata to database
     data = {
         "filename": file.filename,
         "token": file_id,
@@ -64,21 +75,23 @@ def download_file(token):
         return jsonify({"error": "Invalid or expired link"}), 404
 
     file_entry = result.data[0]
+
+    # ✅ Expiry check
     if datetime.utcnow() > datetime.fromisoformat(file_entry["expires_at"]):
         return jsonify({"error": "File expired"}), 403
 
+    # ✅ Access limit check
     if file_entry["access_limit"] <= 0:
         return jsonify({"error": "Download limit reached"}), 403
 
-    # Decrement access limit
+    # ✅ Decrement access limit
     supabase.table("files").update(
         {"access_limit": file_entry["access_limit"] - 1}
     ).eq("token", token).execute()
 
-    # Generate signed URL (expires in 2 minutes)
+    # ✅ Create signed download URL (valid for 2 minutes)
     signed = supabase.storage.from_(BUCKET_NAME).create_signed_url(file_entry["storage_path"], 120)
     if signed.get("error"):
         return jsonify({"error": "Unable to generate download URL"}), 500
 
     return redirect(signed["signedURL"])
-
